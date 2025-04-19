@@ -3,11 +3,11 @@ import java.util.*;
 
 public class HDBManager extends User {
     private String createdProjects;
-    private String registeredProject;
+    private static String registeredProject;
     private boolean isApproved;
 
     public HDBManager(String name, String nric, int age, String maritalStatus, String password) {
-        super(name, nric, password, age, maritalStatus);
+        super(name, nric, age, maritalStatus, password);
         this.registeredProject = "";
         this.isApproved = false;
     }
@@ -22,7 +22,7 @@ public class HDBManager extends User {
         return createdProjects;
     }
 
-    public String getRegisteredProject() {
+    public static String getRegisteredProject() {
         return registeredProject;
     }
 
@@ -131,7 +131,7 @@ public class HDBManager extends User {
         }
     }
 
-    protected void viewAllCreatedProjects() {
+    protected static void viewAllCreatedProjects() {
         System.out.println("All Projects:");
         try (BufferedReader br = new BufferedReader(new FileReader("src/data/ProjectList.csv"))) {
             String line;
@@ -151,26 +151,29 @@ public class HDBManager extends User {
         try (BufferedReader br = new BufferedReader(new FileReader("src/data/ProjectList.csv"))) {
             String line;
             System.out.print("Enter Manager name: ");
-            Scanner scanner;
+            Scanner scanner = new Scanner(System.in);
             String Name = scanner.nextLine();
-            while ((line = br.readLine()) != null) {
-                String[] values = line.split(",");
 
-                if (Objects.equals(values[11], Name)){
-                    for (String value : values) {
-                        System.out.print(value + " ");
+            if (br.readLine() != null) {
+                while ((line = br.readLine()) != null) {
+                    String[] values = line.split(",");
+
+                    // Check if the array has at least 12 elements
+                    if (values.length > 10 && Objects.equals(values[10], Name)) {
+                        for (String value : values) {
+                            System.out.print(value + " ");
+                        }
+                        System.out.println();
                     }
                 }
-
-                System.out.println();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error reading the project list: " + e.getMessage());
         }
 
-        }
+    }
 
-    protected void viewOfficerRegistration() {
+    protected static void viewOfficerRegistration() {
         System.out.println("All Projects:");
         try (BufferedReader br = new BufferedReader(new FileReader("src/data/OfficerList.csv"))) {
             String line;
@@ -193,7 +196,7 @@ public class HDBManager extends User {
             while ((line = br.readLine()) != null) {
                 String[] values = line.split(",");
 
-                if (Objects.equals(values[7], "Pending")){
+                if (Objects.equals(values[7], " Pending")){
                     for (String value : values) {
                         System.out.print(value + " ");
                     }
