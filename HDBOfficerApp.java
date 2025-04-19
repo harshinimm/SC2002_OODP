@@ -1,89 +1,72 @@
 import java.util.Scanner;
 
 public class HDBOfficerApp {
-
-    private HDBOfficer officer;
-
-    public HDBOfficerApp() {
-        // Initialize HDBOfficerApp without a specific officer initially
-    }
-
     public static void main(String[] args) {
-        HDBOfficerApp app = new HDBOfficerApp();
-        app.run();
-    }
+        HDBOfficer officer = new HDBOfficer("", "", "", 0, "", "pending","", "", null);
 
-    public void run() {
-        Scanner scanner = new Scanner(System.in);
+        Scanner sc = new Scanner(System.in);
+        boolean quit = false;
 
-        // Step 1: Officer login
-        System.out.println("==== HDB Officer Portal ====");
-        System.out.print("Enter NRIC: ");
-        String nric = scanner.nextLine();
-        System.out.print("Enter Password: ");
-        String password = scanner.nextLine();
-        officer = new HDBOfficer("Officer Name", nric, password, 30, "Married", "Active", "Project A", "3 Room", null);
+        System.out.println("Welcome to the HDB Officer Portal");
 
-        // Mock login verification logic (for simplicity, assuming login is always successful)
-        if (!nric.equals("validNric") || !password.equals("validPassword")) {
-            System.out.println("Login failed. Please check your credentials.");
-            return; // Exit the app if login fails
+        System.out.print("Enter your NRIC: ");
+        String nric = sc.nextLine();
+
+        System.out.print("Enter your password: ");
+        String password = sc.nextLine();
+        boolean isAuthenticated = officer.isOfficer(nric, password);
+        System.out.println("Welcome Officer"+officer.getName());
+
+        if (!isAuthenticated) {
+            System.out.println("Invalid credentials or not registered as HDB Officer.");
+            return;
         }
 
-        System.out.println("Login successful. Welcome Officer " + officer.getName() + "!");
-        boolean quit = false;
         while (!quit) {
             System.out.println("""
-                \n===== Officer Dashboard =====
-                1. Apply for a Project
+                \nHDB Officer Menu:
+                1. Apply for Project
                 2. View Project Details
-                3. Respond to Enquiries
-                4. Generate Booking Receipt
-                5. Book for Applicant
-                6. Logout
-                ==============================
+                3. Answer Enquiries
+                4. Generate Receipt for Applicant
+                5. Exit
+                Please select an option (1-5):
                 """);
 
-            System.out.print("Select an option: ");
-            String option = scanner.nextLine();
+            int option = sc.nextInt();
+            sc.nextLine(); // Consume newline
 
             switch (option) {
-                case "1":
-                    System.out.print("Enter Project Name to Apply: ");
-                    String projectName = scanner.nextLine();
-                    officer.applyProjects(projectName);
-                    break;
-                case "2":
-                    System.out.print("Enter Project Name to View: ");
-                    projectName = scanner.nextLine();
-                    officer.viewDetails(projectName);
-                    break;
-                case "3":
-                    System.out.print("Enter Project Name to View Enquiries: ");
-                    projectName = scanner.nextLine();
-                    officer.enquiry(projectName);
-                    break;
-                case "4":
-                    System.out.print("Enter Applicant NRIC for Receipt: ");
-                    String applicantNric = scanner.nextLine();
-                    officer.generateReceipt(applicantNric);
-                    break;
-                case "5":
+                case 1 -> {
                     System.out.print("Enter Project Name: ");
-                    projectName = scanner.nextLine();
-                    System.out.print("Enter Flat Type (2 Room / 3 Room): ");
-                    String flatType = scanner.nextLine();
+                    String projectName = sc.nextLine();
+                    System.out.print("Enter Flat Type: ");
+                    String flatType = sc.nextLine();
                     officer.applyForProject(projectName, flatType);
-                    break;
-                case "6":
-                    System.out.println("Logging out...");
+                }
+                case 2 -> {
+                    System.out.print("Enter Project Name: ");
+                    String projectName = sc.nextLine();
+                    officer.viewDetails(projectName);
+                }
+                case 3 -> {
+                    System.out.print("Enter Project Name to handle enquiries: ");
+                    String projectName = sc.nextLine();
+                    officer.enquiry(projectName);
+                }
+                case 4 -> {
+                    System.out.print("Enter Applicant NRIC to generate receipt: ");
+                    String applicantNric = sc.nextLine();
+                    officer.generateReceipt(applicantNric);
+                }
+                case 5 -> {
                     quit = true;
-                    break;
-                default:
-                    System.out.println("Invalid option. Please try again.");
+                    System.out.println("Logging out. Have a great day!");
+                }
+                default -> System.out.println("Invalid option. Please try again.");
             }
         }
 
-        scanner.close();
+        sc.close();
     }
 }
