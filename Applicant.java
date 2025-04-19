@@ -16,8 +16,11 @@ public class Applicant extends User {
     }
 
     public String getApplicationStatus() {
-
         return applicationStatus;
+    }
+
+    public void setApplicationStatus(String status) {
+        this.applicationStatus = status;
     }
 
     public String getAppliedProject() {
@@ -30,6 +33,38 @@ public class Applicant extends User {
 
     public String getFlatType() {
         return flatType;
+    }
+
+    public boolean hasEligibleProjects(List<Project> projectList) {
+        for (Project p : projectList) {
+            if (!p.isVisible()) continue;
+            if (maritalStatus.equalsIgnoreCase("Single") && age >= 35 && p.isAvailable("2-Room")) return true;
+            if (maritalStatus.equalsIgnoreCase("Married") && age >= 21 &&
+                    (p.isAvailable("2-Room") || p.isAvailable("3-Room"))) return true;
+        }
+        return false;
+    }
+
+    public List<String[]> getEligibleProjects(List<Project> projectList) {
+        List<String[]> eligible = new ArrayList<>();
+
+        for (Project p : projectList) {
+            if (!p.isVisible()) continue;
+
+            if (maritalStatus.equalsIgnoreCase("Single") && age >= 35) {
+                if (p.isAvailable("2-Room")) {
+                    eligible.add(new String[]{p.getProjectName(), p.getLocation(), "2-Room", p.getOpeningDate().toString(), p.getClosingDate().toString()});
+                }
+            } else if (maritalStatus.equalsIgnoreCase("Married") && age >= 21) {
+                if (p.isAvailable("2-Room")) {
+                    eligible.add(new String[]{p.getProjectName(), p.getLocation(), "2-Room", p.getOpeningDate().toString(), p.getClosingDate().toString()});
+                }
+                if (p.isAvailable("3-Room")) {
+                    eligible.add(new String[]{p.getProjectName(), p.getLocation(), "3-Room", p.getOpeningDate().toString(), p.getClosingDate().toString()});
+                }
+            }
+        }
+        return eligible;
     }
 
     public void applyForProject(String projectName, String flatType) {
@@ -91,4 +126,3 @@ public class Applicant extends User {
                 enquiries
         );
     }
-}
