@@ -1,16 +1,16 @@
-import java.io.*;
 import java.util.*;
 
 class HDBOfficer extends Applicant {
+    public User user;
     public Enquiry enquiry;
     public Project project;
     public String registeredProject;
     public boolean isApproved;
 
-    public final String officerCSV = "C:/Users/gmaha/IdeaProjects/BTO_Officer/src/OfficerList.csv";
-    public final String applicantCSV = "C:/Users/gmaha/IdeaProjects/BTO_Officer/src/ApplicantList.csv";
-    public final String projectCSV = "C:/Users/gmaha/IdeaProjects/BTO_Officer/src/ProjectList.csv";
-    public final String enquiryCSV = "C:/Users/gmaha/IdeaProjects/BTO_Officer/src/Enquiry.csv";
+    public static final String officerCSV = "C:/Users/gmaha/IdeaProjects/BTO_Officer/src/OfficerList.csv";
+    public static final String applicantCSV = "C:/Users/gmaha/IdeaProjects/BTO_Officer/src/ApplicantList.csv";
+    public static final String projectCSV = "C:/Users/gmaha/IdeaProjects/BTO_Officer/src/ProjectList.csv";
+    public static final String enquiryCSV = "C:/Users/gmaha/IdeaProjects/BTO_Officer/src/Enquiry.csv";
 
     public HDBOfficer(String name, String nric, String password, int age, String maritalStatus,
                       String applicationStatus, String appliedProject, String flatType, List<String> enquiries) {
@@ -19,24 +19,34 @@ class HDBOfficer extends Applicant {
         this.isApproved = false;
     }
 
-    public boolean login(String nric, String password) {
+    public static void login(String nric, String password) {
         try (Scanner scanner = new Scanner(new File(officerCSV))) {
-            if (scanner.hasNextLine()) scanner.nextLine(); // skip header
+            if (scanner.hasNextLine()) scanner.nextLine();
             while (scanner.hasNextLine()) {
                 String[] fields = scanner.nextLine().split(",");
                 if (fields[1].equals(nric) && fields[4].equals(password)) {
                     System.out.println("Login successful. Welcome Officer " + fields[0] + "!");
-                    return true;
+                    return;
                 }
             }
         } catch (IOException e) {
             System.out.println("Error during login.");
         }
-        return false;
     }
 
-    public boolean isOfficer() {
-        return login(this.getNric(), this.getPassword());
+    public static boolean isOfficer(String nric, String password) {
+        try (Scanner scanner = new Scanner(new File(officerCSV))) {
+            if (scanner.hasNextLine()) scanner.nextLine();
+            while (scanner.hasNextLine()) {
+                String[] fields = scanner.nextLine().split(",");
+                if (fields[1].equals(nric) && fields[4].equals(password)) {
+                    return true;
+                }
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("Officer file not found.");
+        }
+        return false;
     }
 
     public boolean hasAppliedAsApplicant() {
@@ -44,7 +54,7 @@ class HDBOfficer extends Applicant {
             if (scanner.hasNextLine()) scanner.nextLine();
             while (scanner.hasNextLine()) {
                 String[] fields = scanner.nextLine().split(",");
-                if (fields.length >= 2 && fields[1].equals(this.getNric())) {
+                if (fields[1].equals(this.getNric())) {
                     return true;
                 }
             }
@@ -79,31 +89,11 @@ class HDBOfficer extends Applicant {
             return false;
         }
 
-        Project project = new Project(projectName);
+        Projectcheck project = new Projectcheck(projectName);
         boolean applied = project.apply(this);
 
         System.out.println(applied ? "Application submitted successfully." : "You have already applied.");
         return applied;
-    }
-
-    public boolean viewStatus(String nric, String appliedProject) {
-        try (Scanner scanner = new Scanner(new File(projectCSV))) {
-            if (scanner.hasNextLine()) scanner.nextLine();
-            while (scanner.hasNextLine()) {
-                String[] fields = scanner.nextLine().split(",");
-                if (fields.length >= 14 && fields[1].equals(this.getAppliedProject()) && !fields[13].equals(nric)) {
-                    return true;
-                }
-            }
-        } catch (FileNotFoundException e) {
-            System.out.println("Project file not found.");
-        }
-        return false;
-    }
-
-    public boolean pendingApproval() {
-        // Placeholder for future logic
-        return false;
     }
 
     public void viewDetails(String projectName) {
@@ -125,10 +115,6 @@ class HDBOfficer extends Applicant {
         }
     }
 
-    public void editProjectDetails(String projectName) {
-        throw new UnsupportedOperationException("You cannot edit project");
-    }
-
     public void enquiry(String projectName) {
         Enquiry.viewProjectEnquiries(projectName);
         Scanner scanner = new Scanner(System.in);
@@ -140,7 +126,7 @@ class HDBOfficer extends Applicant {
             System.out.println("Enquiry Selected: ");
             System.out.println("Officer: " + selectedEnquiry.getOfficerName());
             System.out.println("Question: " + selectedEnquiry.getQuestion());
-            scanner.nextLine(); // consume newline
+            scanner.nextLine();
             System.out.println("Enter your reply:");
             String reply = scanner.nextLine();
             selectedEnquiry.reply(reply, this.getName(), projectName);
@@ -150,7 +136,7 @@ class HDBOfficer extends Applicant {
             System.out.println("Invalid enquiry number. Please try again.");
         }
 
-        enquiry.addEnquiryToCSV(enquiryCSV);
+        Enquiry.addEnquiryToCSV(enquiryCSV, enquiry);
     }
 
     public void applyForProject(String projectName, String flatType) {
@@ -158,7 +144,7 @@ class HDBOfficer extends Applicant {
         List<String> updatedLines = new ArrayList<>();
 
         try (Scanner sc = new Scanner(new File(projectCSV))) {
-            if (sc.hasNextLine()) updatedLines.add(sc.nextLine()); // Add header
+            if (sc.hasNextLine()) updatedLines.add(sc.nextLine());
 
             while (sc.hasNextLine()) {
                 String line = sc.nextLine();
@@ -183,14 +169,12 @@ class HDBOfficer extends Applicant {
                         }
                     }
 
-                    // Reconstruct the updated line
                     line = String.join(",", fields);
                 }
 
                 updatedLines.add(line);
             }
 
-            // Write updated lines back
             try (PrintWriter writer = new PrintWriter(new FileWriter(projectCSV))) {
                 for (String updatedLine : updatedLines) {
                     writer.println(updatedLine);
@@ -245,20 +229,18 @@ class HDBOfficer extends Applicant {
         }
 
         System.out.printf("""
-            === Applicant Booking Receipt ===
-            Applicant Name   : %s
-            NRIC             : %s
-            Age              : %d
-            Marital Status   : %s
-            Flat Type Booked : %s
-            --- Project Details ---
-            Project Name     : %s
-            Neighborhood     : %s
-            Flat Types       : %s ($%s), %s ($%s)
-            ===============================
-            """,
-                applicantName, applicantNric, age, maritalStatus, flatType,
-                appliedProject, neighborhood, flatType1, price1, flatType2, price2
-        );
+                        === Applicant Booking Receipt ===
+                        Applicant Name   : %s
+                        NRIC             : %s
+                        Age              : %d
+                        Marital Status   : %s
+                        Flat Type Booked : %s
+                        --- Project Details ---
+                        Project Name     : %s
+                        Neighborhood     : %s
+                        Flat Types       : %s ($%s), %s ($%s)
+                        ===============================
+                        """,
+                applicantName, applicantNric, age, maritalStatus, flatType, appliedProject, neighborhood, flatType1, price1, flatType2, price2);
     }
 }
