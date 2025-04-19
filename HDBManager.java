@@ -2,58 +2,14 @@ import java.io.*;
 import java.util.*;
 
 public class HDBManager extends User {
-    private List<Applicant> applicants;
     private String createdProjects;
     private String registeredProject;
     private boolean isApproved;
-    private String name;
 
-    // Constructor for HDBManager
     public HDBManager(String name, String nric, int age, String maritalStatus, String password) {
-        super(name, nric, maritalStatus, age, password);
+        super(name, nric, password, age, maritalStatus);
         this.registeredProject = "";
         this.isApproved = false;
-        this.name = name;
-        this.applicants = new ArrayList<>();
-    }
-
-
-    public static ArrayList<HDBManager> loadManagers(String filePath) {
-        ArrayList<HDBManager> managers = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] values = line.split(",");
-                if (values.length >= 5) {
-                    managers.add(new HDBManager(values[0], values[1], Integer.parseInt(values[2]), values[3], values[4]));
-                }
-            }
-        } catch (IOException e) {
-            System.out.println("Error loading managers: " + e.getMessage());
-        }
-        return managers;
-    }
-
-
-    public static void updateManagerCSV(String managerFile, HDBManager updatedManager) {
-        ArrayList<HDBManager> managers = loadManagers(managerFile);
-
-        for (HDBManager manager : managers) {
-            if (manager.getNric().equals(updatedManager.getNric())) {
-                manager.registeredProject = updatedManager.registeredProject;
-                manager.isApproved = updatedManager.isApproved;
-            }
-        }
-
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(managerFile))) {
-            for (HDBManager manager : managers) {
-                bw.write(manager.getName() + "," + manager.getNric() + "," + manager.getPassword() + "," +
-                        manager.getAge() + "," + manager.getMaritalStatus() + "," +
-                        manager.registeredProject + "," + (manager.isApproved ? "true" : "false") + "\n");
-            }
-        } catch (IOException e) {
-            System.out.println("Error updating manager CSV: " + e.getMessage());
-        }
     }
 
     public String getNric() {
@@ -84,7 +40,7 @@ public class HDBManager extends User {
         Scanner scanner = new Scanner(System.in);
         boolean exit = false;
         while (!exit) {
-            System.out.println(" Choose your further action");
+            System.out.println("Choose your further action");
             System.out.println("1. Create a BTO Project");
             System.out.println("2. Edit a BTO Project");
             System.out.println("3. Delete a BTO project");
@@ -95,7 +51,59 @@ public class HDBManager extends User {
             scanner.nextLine();
             switch (choice) {
                 case 1:
-                    Report.generateReport("src/Report.csv");
+                    System.out.print("Creating a new BTO Project... ");
+                    String filePath = "src/data/ProjectList.csv";
+
+                    System.out.print("Enter Project Name: ");
+                    String projectName = scanner.nextLine();
+
+                    System.out.print("Enter Neighborhood: ");
+                    String neighborhood = scanner.nextLine();
+
+                    System.out.print("Enter Type 1: ");
+                    String type1 = scanner.nextLine();
+
+                    System.out.print("Enter Number of units for Type 1: ");
+                    String unitsType1 = scanner.nextLine();
+
+                    System.out.print("Enter Selling price for Type 1: ");
+                    String priceType1 = scanner.nextLine();
+
+                    System.out.print("Enter Type 2: ");
+                    String type2 = scanner.nextLine();
+
+                    System.out.print("Enter Number of units for Type 2: ");
+                    String unitsType2 = scanner.nextLine();
+
+                    System.out.print("Enter Selling price for Type 2: ");
+                    String priceType2 = scanner.nextLine();
+
+                    System.out.print("Enter Application opening date: ");
+                    String openingDate = scanner.nextLine();
+
+                    System.out.print("Enter Application closing date: ");
+                    String closingDate = scanner.nextLine();
+
+                    System.out.print("Enter Manager: ");
+                    String manager = scanner.nextLine();
+
+                    System.out.print("Enter Officer Slot: ");
+                    String officerSlot = scanner.nextLine();
+
+                    System.out.print("Enter Officer: ");
+                    String officer = scanner.nextLine();
+
+                    String newProjectData = String.join(",", projectName, neighborhood, type1, unitsType1, priceType1, type2, unitsType2, priceType2, openingDate, closingDate, manager, officerSlot, officer);
+
+                    try (FileWriter fw = new FileWriter(filePath, true);
+                         BufferedWriter bw = new BufferedWriter(fw);
+                         PrintWriter out = new PrintWriter(bw)) {
+                        out.println(newProjectData);
+                        System.out.println("New project data added successfully.");
+                    } catch (IOException e) {
+                        System.out.println("Error appending project data: " + e.getMessage());
+                    }
+                    viewAllCreatedProjects();
                     break;
                 case 2:
                     System.out.print("Enter Applicant NRIC: ");
@@ -142,10 +150,13 @@ public class HDBManager extends User {
     protected void viewManagerProjects() {
         try (BufferedReader br = new BufferedReader(new FileReader("src/data/ProjectList.csv"))) {
             String line;
+            System.out.print("Enter Manager name: ");
+            Scanner scanner;
+            String Name = scanner.nextLine();
             while ((line = br.readLine()) != null) {
                 String[] values = line.split(",");
 
-                if (Objects.equals(values[11], this.getName())){
+                if (Objects.equals(values[11], Name)){
                     for (String value : values) {
                         System.out.print(value + " ");
                     }
@@ -174,7 +185,6 @@ public class HDBManager extends User {
             System.out.println("Error generating projects: " + e.getMessage());
         }
     }
-
     protected void approveOfficerRegistration() {
         System.out.println("You can choose to approve or reject Officer Registration");
         System.out.println("Here is a list of pending Approvals.");
@@ -183,12 +193,12 @@ public class HDBManager extends User {
             while ((line = br.readLine()) != null) {
                 String[] values = line.split(",");
 
-                if (!Objects.equals(values[7], "Approved"){
+                if (Objects.equals(values[7], "Pending")){
                     for (String value : values) {
                         System.out.print(value + " ");
                     }
+                    System.out.println();
                 }
-                System.out.println();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -197,7 +207,7 @@ public class HDBManager extends User {
         Scanner scanner = new Scanner(System.in);
         boolean exit = false;
         while (!exit) {
-            System.out.println(" Choose your further action");
+            System.out.println("Choose your further action");
             System.out.println("1. Approve a HDBOfficer");
             System.out.println("2. Reject a HDBOfficer");
             System.out.println("3. Exit");
@@ -209,12 +219,12 @@ public class HDBManager extends User {
                 case 1:
                     System.out.print("Enter Officer NRIC: ");
                     String nric = scanner.nextLine();
-                    HDBOfficer.approveProject(Scanner scanner);
+                    HDBOfficer.approveProject(nric);
                     break;
                 case 2:
                     System.out.print("Enter Officer NRIC: ");
-                    String nric = scanner.nextLine();
-                    HDBOfficer.rejectProject(Scanner scanner);
+                    String Nric = scanner.nextLine();
+                    HDBOfficer.rejectProject(Nric);
                     break;
                 case 3:
                     exit = true;
@@ -234,7 +244,7 @@ public class HDBManager extends User {
             while ((line = br.readLine()) != null) {
                 String[] values = line.split(",");
 
-                if (!Objects.equals(values[7], "Approved"){
+                if (!Objects.equals(values[7], "Approved")){
                     for (String value : values) {
                         System.out.print(value + " ");
                     }
@@ -260,12 +270,12 @@ public class HDBManager extends User {
                 case 1:
                     System.out.print("Enter Applicant NRIC: ");
                     String nric = scanner.nextLine();
-                    Applicant.approveProject(Scanner scanner);
+                    approveProject(nric);
                     break;
                 case 2:
                     System.out.print("Enter Applicant NRIC: ");
-                    String nric = scanner.nextLine();
-                    Applicant.rejectProject(Scanner scanner);
+                    String Nric = scanner.nextLine();
+                    rejectProject(Nric);
                     break;
                 case 3:
                     exit = true;
@@ -275,6 +285,12 @@ public class HDBManager extends User {
                     System.out.println("Invalid choice. Please try again.");
             }
         }
+    }
+
+    private void rejectProject(String nric) {
+    }
+
+    private void approveProject(String nric) {
     }
 
     public Applicant getApplicantByNric(String nric) {
